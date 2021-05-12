@@ -1,0 +1,27 @@
+version: "3"
+services: 
+  astrocharts-rest:
+    build: ./astro
+    working_dir: /usr/src/app
+    restart: always
+    command: npm start
+    networks: 
+      - simple_astro
+    volumes:
+      - /usr/src/app/node_modules
+      - ./astro:/usr/src/app/
+    expose: 
+      - "8080"
+  load-balancer:
+    image: nginx:latest
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on: 
+      - astrocharts-rest
+    networks: 
+      - simple_astro
+    ports:
+      - "7575:7575"
+    
+networks: 
+  simple_astro:
