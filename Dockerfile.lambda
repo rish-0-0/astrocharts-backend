@@ -1,0 +1,51 @@
+ARG FUNCTION_DIR="/function"
+
+FROM node:18-buster-slim AS build-image
+
+ARG FUNCTION_DIR
+
+RUN apt-get update && \
+    apt-get install -y \
+    g++ \
+    make \
+    cmake \
+    unzip \
+    libcurl4-openssl-dev \
+    build-essential \
+    python2 \
+    autoconf \
+    automake \
+    libtool \
+    m4 \
+    pkg-config \
+    python3
+
+RUN mkdir -p ${FUNCTION_DIR}
+
+COPY ./astro ${FUNCTION_DIR}
+
+COPY ./entry.sh ${FUNCTION_DIR}
+COPY ./lambda.js ${FUNCTION_DIR}
+
+WORKDIR ${FUNCTION_DIR}
+
+RUN npm install
+
+RUN npm install aws-lambda-ric
+
+FROM node:18-buster-slim
+
+ENV NPM_CONFIG_CACHE=/tmp/.npm
+ENV FONTCONFIG_PATH=/etc/fonts
+
+ARG FUNCTION_DIR
+
+WORKDIR ${FUNCTION_DIR}
+
+COPY --from=build-image ${FUNCTION_DIR} ${FUNCTION_DIR}
+
+RUN chmod +x entry.sh
+
+ENTRYPOINT [ "./entry.sh" ]
+
+CMD ["lambda.handler"]

@@ -1,0 +1,1 @@
+exec /usr/local/bin/npx aws-lambda-ric $@
